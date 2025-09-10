@@ -270,30 +270,6 @@ export const ProfilePage: React.FC = () => {
           </CardContent>
         </Card>
       </div>
-
-      {/* Account Statistics */}
-      <Card className="mt-8">
-        <CardHeader>
-          <CardTitle>Account Overview</CardTitle>
-          <CardDescription>Your account activity and statistics</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="text-center p-4 rounded-lg bg-muted/50">
-              <div className="text-2xl font-bold text-primary">0</div>
-              <div className="text-sm text-muted-foreground">Total Orders</div>
-            </div>
-            <div className="text-center p-4 rounded-lg bg-muted/50">
-              <div className="text-2xl font-bold text-primary">$0.00</div>
-              <div className="text-sm text-muted-foreground">Total Spent</div>
-            </div>
-            <div className="text-center p-4 rounded-lg bg-muted/50">
-              <div className="text-2xl font-bold text-primary">0%</div>
-              <div className="text-sm text-muted-foreground">Savings from Coupons</div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };
