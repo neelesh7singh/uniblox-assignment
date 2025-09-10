@@ -11,12 +11,14 @@ import type {
   ApiError,
   PurchaseAnalytics,
   PurchaseAnalyticsSummary,
+  AdminStats,
 } from '@/types';
 import { apiClient } from '@/services/api';
 
 interface AdminState {
   // Analytics Data
   purchaseAnalytics: PurchaseAnalyticsSummary | null;
+  dashboardStats: AdminStats | null;
 
   // Management Data
   users: User[];
@@ -67,6 +69,7 @@ interface AdminState {
 
 const initialState = {
   purchaseAnalytics: null,
+  dashboardStats: null,
   users: [],
   products: [],
   orders: [],
@@ -95,14 +98,21 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     }));
 
     try {
-      const [purchaseResponse] = await Promise.all([apiClient.getPurchaseAnalytics()]);
+      const [purchaseResponse, revenueResponse, discountResponse, dashboardResponse] =
+        await Promise.all([
+          apiClient.getPurchaseAnalytics(),
+          apiClient.getTotalRevenue(),
+          apiClient.getTotalDiscountAmount(),
+          apiClient.getDashboardStats(),
+        ]);
 
       // Extract summary data from purchase analytics response
       const purchaseAnalytics = purchaseResponse.summary
         ? {
             totalPurchases: purchaseResponse.summary.totalQuantitySold || 0,
             totalRevenue: purchaseResponse.summary.totalRevenue || 0,
-            averageOrderValue: 0, // Calculate from purchase data if needed
+            averageOrderValue: revenueResponse?.averageOrderValue || 0,
+            totalDiscountAmount: discountResponse?.totalDiscountAmount || 0,
             topSellingProducts:
               purchaseResponse.data?.slice(0, 5).map((item) => ({
                 productId: item.productId,
@@ -117,6 +127,7 @@ export const useAdminStore = create<AdminState>((set, get) => ({
 
       set((state) => ({
         purchaseAnalytics,
+        dashboardStats: dashboardResponse,
         loading: { ...state.loading, analytics: false },
         error: null,
       }));

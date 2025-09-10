@@ -233,6 +233,7 @@ export interface PurchaseAnalyticsSummary {
   totalPurchases: number;
   totalRevenue: number;
   averageOrderValue: number;
+  totalDiscountAmount: number;
   topSellingProducts: Array<{
     productId: string;
     productName: string;

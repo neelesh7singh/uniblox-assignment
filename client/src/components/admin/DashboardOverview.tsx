@@ -3,28 +3,28 @@
  * Displays key metrics and analytics overview
  */
 
-import React from 'react';
 import {
   DollarSign,
-  ShoppingCart,
-  Users,
-  TrendingUp,
   Package,
-  Gift,
-  Calendar,
+  ShoppingCart,
+  TrendingUp,
+  Users,
   BarChart3,
+  Gift,
 } from 'lucide-react';
+import React from 'react';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
-import AnalyticsCard from './AnalyticsCard';
 import { formatCurrency } from '@/lib/utils';
+import AnalyticsCard from './AnalyticsCard';
 
 import type { PurchaseAnalyticsSummary } from '@/types';
 
 interface DashboardOverviewProps {
   purchaseAnalytics: PurchaseAnalyticsSummary | null;
+  dashboardStats: any | null;
   loading: boolean;
 }
 
@@ -33,6 +33,7 @@ interface DashboardOverviewProps {
  */
 export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
   purchaseAnalytics,
+  dashboardStats,
   loading,
 }) => {
   return (
@@ -50,7 +51,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
 
         <AnalyticsCard
           title="Total Orders"
-          value={0}
+          value={dashboardStats?.totalOrders || 0}
           subtitle="Orders placed"
           icon={ShoppingCart}
           format="number"
@@ -59,7 +60,7 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
 
         <AnalyticsCard
           title="Total Users"
-          value={0}
+          value={dashboardStats?.systemHealth?.totalUsers || 0}
           subtitle="Registered users"
           icon={Users}
           format="number"
@@ -79,82 +80,35 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
       {/* Secondary Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <AnalyticsCard
-          title="Active Users"
-          value={0}
-          subtitle="This month"
-          icon={Users}
-          format="number"
+          title="Discount Given"
+          value={purchaseAnalytics?.totalDiscountAmount || 0}
+          subtitle="Total savings"
+          icon={DollarSign}
+          format="currency"
           loading={loading}
         />
 
         <AnalyticsCard
-          title="New Users"
-          value={0}
-          subtitle="This month"
-          icon={Calendar}
+          title="Total Products"
+          value={dashboardStats?.systemHealth?.totalProducts || 0}
+          subtitle="Available products"
+          icon={Package}
           format="number"
           loading={loading}
         />
 
         <AnalyticsCard
           title="Total Coupons"
-          value={0}
+          value={dashboardStats?.totalCouponsGenerated || 0}
           subtitle="Generated"
           icon={Gift}
           format="number"
-          loading={loading}
-        />
-
-        <AnalyticsCard
-          title="Discount Given"
-          value={0}
-          subtitle="Total savings"
-          icon={DollarSign}
-          format="currency"
           loading={loading}
         />
       </div>
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Revenue Chart Placeholder */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BarChart3 className="h-5 w-5" />
-              Revenue Trend
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="space-y-3">
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-4 w-1/2" />
-                <Skeleton className="h-32 w-full" />
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">
-                  Revenue chart will be implemented with a charting library
-                </p>
-                {purchaseAnalytics?.revenueByMonth && (
-                  <div className="mt-4 space-y-2">
-                    <h4 className="font-medium">Recent Months:</h4>
-                    {purchaseAnalytics.revenueByMonth.slice(-3).map((month, index) => (
-                      <div key={index} className="flex justify-between text-sm">
-                        <span>{month.month}</span>
-                        <span className="font-medium">{formatCurrency(month.revenue)}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
         {/* Top Products Chart Placeholder */}
         <Card>
           <CardHeader>
@@ -194,6 +148,65 @@ export const DashboardOverview: React.FC<DashboardOverviewProps> = ({
                     <p className="text-muted-foreground">No sales data available</p>
                   </div>
                 )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Revenue Summary Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5" />
+              Revenue Summary
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="space-y-3">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="h-32 w-full" />
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Total Revenue</span>
+                  <span className="font-medium">
+                    {formatCurrency(purchaseAnalytics?.totalRevenue || 0)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Average Order Value</span>
+                  <span className="font-medium">
+                    {formatCurrency(purchaseAnalytics?.averageOrderValue || 0)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Total Discount Given</span>
+                  <span className="font-medium">
+                    {formatCurrency(purchaseAnalytics?.totalDiscountAmount || 0)}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Total Orders</span>
+                  <span className="font-medium">{dashboardStats?.totalOrders || 0}</span>
+                </div>
+                <div className="pt-2 border-t">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Net Revenue</span>
+                    <span className="font-bold text-lg">
+                      {formatCurrency(
+                        (purchaseAnalytics?.totalRevenue || 0) +
+                          (purchaseAnalytics?.totalDiscountAmount || 0)
+                      )}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Revenue + Discounts (gross sales)
+                  </p>
+                </div>
               </div>
             )}
           </CardContent>
