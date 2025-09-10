@@ -15,14 +15,15 @@ describe("Authentication Routes", () => {
   });
 
   describe("POST /api/auth/register", () => {
-    const validRegistrationData = {
-      email: "test@example.com",
+    const getValidRegistrationData = () => ({
+      email: `test${Date.now()}@example.com`,
       password: "TestPass123",
       firstName: "John",
       lastName: "Doe",
-    };
+    });
 
     it("should register a new user successfully", async () => {
+      const validRegistrationData = getValidRegistrationData();
       const response = await request(app)
         .post("/api/auth/register")
         .send(validRegistrationData)
@@ -44,6 +45,7 @@ describe("Authentication Routes", () => {
     });
 
     it("should reject registration with duplicate email", async () => {
+      const validRegistrationData = getValidRegistrationData();
       // First registration
       await request(app)
         .post("/api/auth/register")
@@ -69,6 +71,7 @@ describe("Authentication Routes", () => {
     });
 
     it("should validate email format", async () => {
+      const validRegistrationData = getValidRegistrationData();
       const response = await request(app)
         .post("/api/auth/register")
         .send({
@@ -81,6 +84,7 @@ describe("Authentication Routes", () => {
     });
 
     it("should validate password strength", async () => {
+      const validRegistrationData = getValidRegistrationData();
       const response = await request(app)
         .post("/api/auth/register")
         .send({
@@ -93,6 +97,7 @@ describe("Authentication Routes", () => {
     });
 
     it("should sanitize input data", async () => {
+      const validRegistrationData = getValidRegistrationData();
       const response = await request(app)
         .post("/api/auth/register")
         .send({
@@ -109,12 +114,15 @@ describe("Authentication Routes", () => {
   });
 
   describe("POST /api/auth/login", () => {
-    const userCredentials = {
-      email: "test@example.com",
+    const getUserCredentials = () => ({
+      email: `test${Date.now()}@example.com`,
       password: "TestPass123",
-    };
+    });
+
+    let userCredentials: { email: string; password: string };
 
     beforeEach(async () => {
+      userCredentials = getUserCredentials();
       // Create a user for login tests
       await request(app)
         .post("/api/auth/register")
@@ -178,17 +186,21 @@ describe("Authentication Routes", () => {
   describe("GET /api/auth/profile", () => {
     let authToken: string;
     let userId: string;
+    let userEmail: string;
 
     beforeEach(async () => {
-      const response = await request(app).post("/api/auth/register").send({
-        email: "test@example.com",
-        password: "TestPass123",
-        firstName: "John",
-        lastName: "Doe",
-      });
+      const response = await request(app)
+        .post("/api/auth/register")
+        .send({
+          email: `test${Date.now()}@example.com`,
+          password: "TestPass123",
+          firstName: "John",
+          lastName: "Doe",
+        });
 
       authToken = response.body.data.token;
       userId = response.body.data.user.id;
+      userEmail = response.body.data.user.email;
     });
 
     it("should get user profile successfully", async () => {
@@ -199,7 +211,7 @@ describe("Authentication Routes", () => {
 
       expect(response.body.message).toBe("Profile retrieved successfully");
       expect(response.body.data.id).toBe(userId);
-      expect(response.body.data.email).toBe("test@example.com");
+      expect(response.body.data.email).toBe(userEmail);
       expect(response.body.data).not.toHaveProperty("password");
     });
 
@@ -221,16 +233,20 @@ describe("Authentication Routes", () => {
 
   describe("PUT /api/auth/profile", () => {
     let authToken: string;
+    let userEmail: string;
 
     beforeEach(async () => {
-      const response = await request(app).post("/api/auth/register").send({
-        email: "test@example.com",
-        password: "TestPass123",
-        firstName: "John",
-        lastName: "Doe",
-      });
+      const response = await request(app)
+        .post("/api/auth/register")
+        .send({
+          email: `test${Date.now()}@example.com`,
+          password: "TestPass123",
+          firstName: "John",
+          lastName: "Doe",
+        });
 
       authToken = response.body.data.token;
+      userEmail = response.body.data.user.email;
     });
 
     it("should update profile successfully", async () => {
@@ -279,7 +295,7 @@ describe("Authentication Routes", () => {
       await request(app)
         .post("/api/auth/login")
         .send({
-          email: "test@example.com",
+          email: userEmail,
           password: updateData.password,
         })
         .expect(200);
@@ -320,12 +336,14 @@ describe("Authentication Routes", () => {
     let authToken: string;
 
     beforeEach(async () => {
-      const response = await request(app).post("/api/auth/register").send({
-        email: "test@example.com",
-        password: "TestPass123",
-        firstName: "John",
-        lastName: "Doe",
-      });
+      const response = await request(app)
+        .post("/api/auth/register")
+        .send({
+          email: `test${Date.now()}@example.com`,
+          password: "TestPass123",
+          firstName: "John",
+          lastName: "Doe",
+        });
 
       authToken = response.body.data.token;
     });
@@ -347,48 +365,6 @@ describe("Authentication Routes", () => {
 
     it("should require authentication", async () => {
       const response = await request(app).post("/api/auth/refresh").expect(401);
-
-      expect(response.body.error).toBe("Access token required");
-    });
-  });
-
-  describe("GET /api/auth/verify", () => {
-    let authToken: string;
-
-    beforeEach(async () => {
-      const response = await request(app).post("/api/auth/register").send({
-        email: "test@example.com",
-        password: "TestPass123",
-        firstName: "John",
-        lastName: "Doe",
-      });
-
-      authToken = response.body.data.token;
-    });
-
-    it("should verify token successfully", async () => {
-      const response = await request(app)
-        .get("/api/auth/verify")
-        .set("Authorization", `Bearer ${authToken}`)
-        .expect(200);
-
-      expect(response.body.message).toBe("Token is valid");
-      expect(response.body.data).toHaveProperty("userId");
-      expect(response.body.data).toHaveProperty("email");
-      expect(response.body.data).toHaveProperty("isAdmin");
-    });
-
-    it("should reject invalid token", async () => {
-      const response = await request(app)
-        .get("/api/auth/verify")
-        .set("Authorization", "Bearer invalid-token")
-        .expect(401);
-
-      expect(response.body.error).toBe("Invalid token");
-    });
-
-    it("should require authentication", async () => {
-      const response = await request(app).get("/api/auth/verify").expect(401);
 
       expect(response.body.error).toBe("Access token required");
     });

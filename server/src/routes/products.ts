@@ -7,16 +7,20 @@ import { Request, Response, Router } from "express";
 import Joi from "joi";
 import { v4 as uuidv4 } from "uuid";
 import {
-    authenticateToken,
-    optionalAuth,
-    requireAdmin,
+  authenticateToken,
+  optionalAuth,
+  requireAdmin,
 } from "../middleware/auth";
-import { asyncHandler, BusinessLogicError, NotFoundError } from "../middleware/errorHandler";
+import {
+  asyncHandler,
+  BusinessLogicError,
+  NotFoundError,
+} from "../middleware/errorHandler";
 import { rateLimiters } from "../middleware/rateLimiter";
 import {
-    productSchemas,
-    sanitizeRequest,
-    validate
+  productSchemas,
+  sanitizeRequest,
+  validate,
 } from "../middleware/validation";
 import { DataStore } from "../store/DataStore";
 import { CreateProductRequest, PaginatedResponse, Product } from "../types";
@@ -35,7 +39,7 @@ router.get(
   validate({
     query: Joi.object({
       page: Joi.number().integer().min(1).default(1),
-      limit: Joi.number().integer().min(1).max(100).default(20),
+      limit: Joi.number().integer().min(1).max(100).default(50),
       category: Joi.string().min(2).max(50).optional(),
       search: Joi.string().min(1).max(200).optional(),
       minPrice: Joi.number().min(0).optional(),
@@ -49,7 +53,7 @@ router.get(
   asyncHandler(async (req: Request, res: Response): Promise<void> => {
     const {
       page = 1,
-      limit = 20,
+      limit = 50,
       category,
       search,
       minPrice,
@@ -306,65 +310,6 @@ router.delete(
 
     res.json({
       message: "Product deleted successfully",
-    });
-  })
-);
-
-/**
- * POST /api/products/:id/restore
- * Restore a soft-deleted product (Admin only)
- */
-router.post(
-  "/:id/restore",
-  authenticateToken,
-  requireAdmin,
-  rateLimiters.admin,
-  validate(productSchemas.getById),
-  asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const { id } = req.params;
-
-    const product = dataStore.getProductById(id);
-    if (!product) {
-      throw new NotFoundError("Product", id);
-    }
-
-    product.isActive = true;
-    product.updatedAt = new Date();
-
-    const restoredProduct = dataStore.addProduct(product);
-
-    res.json({
-      message: "Product restored successfully",
-      data: restoredProduct,
-    });
-  })
-);
-
-/**
- * GET /api/products/:id/stock
- * Check stock availability for a product
- */
-router.get(
-  "/:id/stock",
-  rateLimiters.general,
-  optionalAuth,
-  validate(productSchemas.getById),
-  asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    const { id } = req.params;
-
-    const product = dataStore.getProductById(id);
-    if (!product || !product.isActive) {
-      throw new NotFoundError("Product", id);
-    }
-
-    res.json({
-      message: "Stock information retrieved successfully",
-      data: {
-        productId: product.id,
-        productName: product.name,
-        stock: product.stock,
-        isAvailable: product.stock > 0,
-      },
     });
   })
 );

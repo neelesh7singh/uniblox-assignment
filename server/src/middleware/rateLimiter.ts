@@ -97,9 +97,12 @@ class RateLimitStore {
 const rateLimitStore = new RateLimitStore();
 
 // Cleanup expired records every 5 minutes
-setInterval(() => {
-  rateLimitStore.cleanup();
-}, 5 * 60 * 1000);
+setInterval(
+  () => {
+    rateLimitStore.cleanup();
+  },
+  5 * 60 * 1000
+);
 
 /**
  * Generate rate limit key for a request
@@ -148,40 +151,46 @@ export const createRateLimit = (config: RateLimitConfig) => {
   };
 };
 
+// Helper function to determine if we're in a development/test environment
+const isDevelopmentOrTest = (): boolean => {
+  const env = process.env.NODE_ENV;
+  return env === "test" || env === "development" || !env;
+};
+
 // Pre-configured rate limiters for different endpoints
 export const rateLimiters = {
   // General API rate limit
   general: createRateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    maxRequests: process.env.NODE_ENV === "test" ? 10000 : 1000, // Much higher limit for tests
+    maxRequests: isDevelopmentOrTest() ? 10000 : 1000, // Much higher limit for dev/test
     message: "Too many requests from this IP, please try again later.",
   }),
 
   // Authentication rate limit (more restrictive)
   auth: createRateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    maxRequests: process.env.NODE_ENV === "test" ? 1000 : 10, // Much higher limit for tests
+    maxRequests: isDevelopmentOrTest() ? 1000 : 10, // Much higher limit for dev/test
     message: "Too many authentication attempts, please try again later.",
   }),
 
   // Strict rate limit for sensitive operations
   strict: createRateLimit({
     windowMs: 60 * 1000, // 1 minute
-    maxRequests: process.env.NODE_ENV === "test" ? 500 : 5, // Much higher limit for tests
+    maxRequests: isDevelopmentOrTest() ? 500 : 5, // Much higher limit for dev/test
     message: "Rate limit exceeded for this operation.",
   }),
 
   // Cart operations (moderate limit)
   cart: createRateLimit({
     windowMs: 5 * 60 * 1000, // 5 minutes
-    maxRequests: process.env.NODE_ENV === "test" ? 5000 : 100, // Much higher limit for tests
+    maxRequests: isDevelopmentOrTest() ? 5000 : 100, // Much higher limit for dev/test
     message: "Too many cart operations, please slow down.",
   }),
 
   // Admin operations (more lenient for admins)
   admin: createRateLimit({
     windowMs: 5 * 60 * 1000, // 5 minutes
-    maxRequests: process.env.NODE_ENV === "test" ? 10000 : 500, // Much higher limit for tests
+    maxRequests: isDevelopmentOrTest() ? 10000 : 500, // Much higher limit for dev/test
     message: "Admin rate limit exceeded.",
   }),
 };

@@ -300,33 +300,4 @@ router.post(
   })
 );
 
-/**
- * GET /api/auth/verify
- * Verify if the current token is valid (used for client-side auth checks)
- */
-router.get(
-  "/verify",
-  authenticateToken,
-  asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    if (!req.user) {
-      throw new AuthenticationError("Token invalid");
-    }
-
-    // Verify user still exists
-    const user = dataStore.getUserById(req.user.userId);
-    if (!user) {
-      throw new AuthenticationError("User not found");
-    }
-
-    res.json({
-      message: "Token is valid",
-      data: {
-        userId: req.user.userId,
-        email: req.user.email,
-        isAdmin: req.user.isAdmin,
-      },
-    });
-  })
-);
-
 export default router;

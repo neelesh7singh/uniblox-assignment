@@ -17,13 +17,15 @@ describe("Order Routes", () => {
   beforeEach(async () => {
     dataStore = DataStore.getInstance();
 
-    // Create and authenticate user
-    const userResponse = await request(app).post("/api/auth/register").send({
-      email: "test@example.com",
-      password: "TestPass123",
-      firstName: "John",
-      lastName: "Doe",
-    });
+    // Create and authenticate user with unique email
+    const userResponse = await request(app)
+      .post("/api/auth/register")
+      .send({
+        email: `test${Date.now()}@example.com`,
+        password: "TestPass123",
+        firstName: "John",
+        lastName: "Doe",
+      });
 
     authToken = userResponse.body.data.token;
     userId = userResponse.body.data.user.id;

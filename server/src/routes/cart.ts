@@ -6,7 +6,12 @@
 import { Request, Response, Router } from "express";
 import { v4 as uuidv4 } from "uuid";
 import { authenticateToken } from "../middleware/auth";
-import { asyncHandler, AuthenticationError, BusinessLogicError, NotFoundError } from "../middleware/errorHandler";
+import {
+  asyncHandler,
+  AuthenticationError,
+  BusinessLogicError,
+  NotFoundError,
+} from "../middleware/errorHandler";
 import { rateLimiters } from "../middleware/rateLimiter";
 import {
   cartSchemas,
@@ -321,40 +326,6 @@ router.delete(
         totalItems: 0,
         totalAmount: 0,
         isEmpty: true,
-      },
-    });
-  })
-);
-
-/**
- * GET /api/cart/count
- * Get total number of items in cart (for display in UI)
- */
-router.get(
-  "/count",
-  rateLimiters.general,
-  asyncHandler(async (req: Request, res: Response): Promise<void> => {
-    if (!req.user) {
-      throw new AuthenticationError("User not authenticated");
-    }
-
-    const cart = dataStore.getCartByUserId(req.user.userId);
-
-    let totalItems = 0;
-    if (cart) {
-      // Only count items for products that still exist and are active
-      for (const item of cart.items) {
-        const product = dataStore.getProductById(item.productId);
-        if (product && product.isActive) {
-          totalItems += item.quantity;
-        }
-      }
-    }
-
-    res.json({
-      message: "Cart count retrieved successfully",
-      data: {
-        totalItems,
       },
     });
   })

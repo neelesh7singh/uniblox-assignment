@@ -21,7 +21,7 @@ import couponRoutes from "./routes/coupons";
 import adminRoutes from "./routes/admin";
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 // Initialize data store
 const dataStore = DataStore.getInstance();
@@ -47,7 +47,7 @@ app.use(
     origin:
       process.env.NODE_ENV === "production"
         ? ["https://your-frontend-domain.com"] // Replace with actual frontend URL
-        : ["http://localhost:3000", "http://localhost:3001"], // Development origins
+        : ["http://localhost:3000"], // Development origins (client on 3000)
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
@@ -120,7 +120,6 @@ app.get("/api/docs", (req, res) => {
         "GET /auth/profile": "Get current user profile",
         "PUT /auth/profile": "Update user profile",
         "POST /auth/refresh": "Refresh JWT token",
-        "GET /auth/verify": "Verify JWT token",
       },
       products: {
         "GET /products": "List all products with filtering and pagination",
@@ -137,7 +136,6 @@ app.get("/api/docs", (req, res) => {
         "PUT /cart/:productId": "Update cart item quantity",
         "DELETE /cart/:productId": "Remove item from cart",
         "DELETE /cart": "Clear entire cart",
-        "GET /cart/count": "Get cart item count",
         "POST /cart/validate": "Validate cart items",
       },
       orders: {
@@ -149,11 +147,8 @@ app.get("/api/docs", (req, res) => {
       },
       coupons: {
         "POST /coupons/validate": "Validate coupon code",
-        "GET /coupons/my-coupons": "Get available coupons for user",
-        "GET /coupons/used-coupons": "Get used coupons by user",
         "POST /coupons/generate": "Generate new coupon (Admin)",
         "GET /coupons/admin/all": "Get all coupons (Admin)",
-        "POST /coupons/admin/bulk-generate": "Bulk generate coupons (Admin)",
       },
       admin: {
         "GET /admin/purchases": "Get purchase analytics",
@@ -162,6 +157,9 @@ app.get("/api/docs", (req, res) => {
         "GET /admin/total-discount": "Get total discount amount",
         "GET /admin/dashboard": "Get dashboard statistics",
         "GET /admin/users": "Get user analytics",
+        "GET /admin/products": "Get product management data",
+        "GET /orders/admin/all": "Get all orders (Admin)",
+        "PUT /orders/admin/:id/status": "Update order status (Admin)",
       },
     },
   });

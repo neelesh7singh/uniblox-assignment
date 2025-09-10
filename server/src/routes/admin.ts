@@ -511,6 +511,69 @@ router.get(
 );
 
 /**
+ * GET /api/admin/products
+ * Get product management data
+ */
+router.get(
+  "/products",
+  rateLimiters.admin,
+  validate(adminSchemas.pagination),
+  asyncHandler(async (req: Request, res: Response): Promise<void> => {
+    const { page = 1, limit = 20 } = req.query;
+    const allProducts = dataStore.getAllProducts();
+    const purchaseStats = dataStore.getProductPurchaseStats();
+
+    // Add sales data to products
+    const productsWithStats = allProducts.map((product) => {
+      const stats = purchaseStats.get(product.id);
+      return {
+        id: product.id,
+        name: product.name,
+        description: product.description,
+        price: product.price,
+        category: product.category,
+        stock: product.stock,
+        isActive: product.isActive,
+        createdAt: product.createdAt,
+        updatedAt: product.updatedAt,
+        sales: {
+          totalQuantitySold: stats?.quantity || 0,
+          totalRevenue: stats ? Math.round(stats.revenue * 100) / 100 : 0,
+        },
+      };
+    });
+
+    // Sort by total revenue (highest first)
+    productsWithStats.sort(
+      (a, b) => b.sales.totalRevenue - a.sales.totalRevenue
+    );
+
+    // Apply pagination
+    const pageNum = Number(page);
+    const limitNum = Number(limit);
+    const startIndex = (pageNum - 1) * limitNum;
+    const endIndex = startIndex + limitNum;
+    const paginatedProducts = productsWithStats.slice(startIndex, endIndex);
+
+    res.json({
+      message: "Product management data retrieved successfully",
+      data: paginatedProducts,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total: productsWithStats.length,
+        pages: Math.ceil(productsWithStats.length / limitNum),
+      },
+      summary: {
+        totalProducts: allProducts.length,
+        activeProducts: allProducts.filter((p) => p.isActive).length,
+        totalStock: allProducts.reduce((sum, p) => sum + p.stock, 0),
+      },
+    });
+  })
+);
+
+/**
  * GET /api/admin/users
  * Get user analytics and management information
  */

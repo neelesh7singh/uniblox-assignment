@@ -13,19 +13,13 @@ beforeEach(() => {
   // Reset data store before each test to ensure clean state
   const dataStore = DataStore.getInstance();
   dataStore.reset();
+});
 
-  // Clear rate limiter store if it exists
-  try {
-    const { getRateLimitStats } = require("../middleware/rateLimiter");
-    // Clear all rate limit data
-    const stats = getRateLimitStats();
-    if (stats.totalKeys > 0) {
-      // Note: In a real implementation, we'd want a clearAll method
-      // For now, the high limits should prevent issues
-    }
-  } catch (error) {
-    // Ignore if rateLimiter is not available
-  }
+// Global test cleanup
+afterEach(() => {
+  // Reset data store after each test to ensure clean state
+  const dataStore = DataStore.getInstance();
+  dataStore.reset();
 });
 
 // Global test utilities
